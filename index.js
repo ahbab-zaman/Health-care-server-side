@@ -25,6 +25,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const medicineCollection = client.db("medicineDB").collection("medicine");
+    const discountCollection = client.db("medicineDB").collection("discount");
 
     // app.post("/medicine", async (req, res) => {
     //   const query = req.body;
@@ -39,8 +40,13 @@ async function run() {
 
     app.get("/medicine/:category", async (req, res) => {
       const category = req.params.category;
-      const query = { category_name : category };
+      const query = { category_name: category };
       const result = await medicineCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.get("/discountMedicine", async (req, res) => {
+      const result = await discountCollection.find().toArray();
       res.send(result);
     });
 
