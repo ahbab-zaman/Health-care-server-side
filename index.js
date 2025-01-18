@@ -26,12 +26,7 @@ async function run() {
   try {
     const medicineCollection = client.db("medicineDB").collection("medicine");
     const discountCollection = client.db("medicineDB").collection("discount");
-
-    // app.post("/medicine", async (req, res) => {
-    //   const query = req.body;
-    //   const result = await medicineCollection.insertOne(query);
-    //   res.send(result);
-    // });
+    const cartCollection = client.db("medicineDB").collection("carts");
 
     app.get("/allMedicine", async (req, res) => {
       const result = await medicineCollection.find().toArray();
@@ -50,11 +45,25 @@ async function run() {
       res.send(result);
     });
 
+    // Cart
+
+    app.post("/addCart", async (req, res) => {
+      const query = req.body;
+      const result = await cartCollection.insertOne(query);
+      res.send(result);
+    });
+
+    app.get("/allCart/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await cartCollection.find(query).toArray();
+      res.send(result);
+    });
+
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
   } finally {
-    // await client.close();
   }
 }
 run().catch(console.dir);
