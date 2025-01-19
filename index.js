@@ -2,6 +2,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 4000;
 const app = express();
 app.use(express.json());
@@ -27,6 +28,30 @@ async function run() {
     const medicineCollection = client.db("medicineDB").collection("medicine");
     const discountCollection = client.db("medicineDB").collection("discount");
     const cartCollection = client.db("medicineDB").collection("carts");
+
+    // JWT API
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN, {
+        expiresIn: "365d",
+      });
+      res.send({ token });
+    });
+
+    // Middleware
+    const verifyToken = (req, res, next) => {
+      if (!req.headers.authorization) {
+        return res.status(401).send({ message: "Unauthorized Access" });
+      }
+      const token = req.headers.authorization.split(" ")[1];
+      jwt.verify(token, process.env.ACCESS_TOKEN, (error, decoded) => {
+        if (error) {
+          return res.status(401).send({ message: "Unauthorized Access" });
+        }
+        req.decoded = decoded;
+        next();
+      });
+    };
 
     app.get("/allMedicine", async (req, res) => {
       const result = await medicineCollection.find().toArray();
