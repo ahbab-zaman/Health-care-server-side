@@ -30,6 +30,7 @@ async function run() {
     const discountCollection = client.db("medicineDB").collection("discount");
     const cartCollection = client.db("medicineDB").collection("carts");
     const paymentCollection = client.db("medicineDB").collection("payments");
+    const userCollection = client.db("medicineDB").collection("users");
 
     // JWT API
     app.post("/jwt", async (req, res) => {
@@ -128,6 +129,10 @@ async function run() {
       const result = await paymentCollection.find(query).toArray();
       res.send(result);
     });
+
+    // Users API
+
+    app.get()
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
