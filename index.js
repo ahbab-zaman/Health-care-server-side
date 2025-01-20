@@ -121,6 +121,13 @@ async function run() {
       const deletedCarts = await cartCollection.deleteMany(query);
       res.send({ paymentResult, deletedCarts });
     });
+
+    app.get("/payment-invoice/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
+    });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
