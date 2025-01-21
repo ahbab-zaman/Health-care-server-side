@@ -31,6 +31,7 @@ async function run() {
     const cartCollection = client.db("medicineDB").collection("carts");
     const paymentCollection = client.db("medicineDB").collection("payments");
     const userCollection = client.db("medicineDB").collection("users");
+    const categoryCollection = client.db("medicineDB").collection("category");
 
     // JWT API
     app.post("/jwt", async (req, res) => {
@@ -91,6 +92,26 @@ async function run() {
 
     app.get("/discountMedicine", async (req, res) => {
       const result = await discountCollection.find().toArray();
+      res.send(result);
+    });
+
+    // Add Category
+
+    app.post("/addCategory", verifyToken, verifyAdmin, async (req, res) => {
+      const query = req.body;
+      const result = await categoryCollection.insertOne(query);
+      res.send(result);
+    });
+
+    app.get("/allCategory", verifyToken, verifyAdmin, async (req, res) => {
+      const result = await categoryCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.delete("/category/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await categoryCollection.deleteOne(query);
       res.send(result);
     });
 
