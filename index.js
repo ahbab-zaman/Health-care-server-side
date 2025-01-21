@@ -153,7 +153,7 @@ async function run() {
 
     // Users API
 
-    app.post("/addUser", verifyToken, async (req, res) => {
+    app.post("/addUser", async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
       const existingUser = await userCollection.findOne(query);
@@ -165,6 +165,7 @@ async function run() {
     });
 
     app.get("/allUsers/:email", verifyToken, verifyAdmin, async (req, res) => {
+      const email = req.params.email;
       const query = { email: { $ne: email } };
       const result = await userCollection.find(query).toArray();
       res.send(result);
@@ -174,6 +175,17 @@ async function run() {
       const email = req.params.email;
       const result = await userCollection.findOne({ email });
       res.send({ role: result?.role });
+    });
+
+    app.patch("/user/role/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const { role } = req.body;
+      const filter = { email: email };
+      const updatedDoc = {
+        $set: { role, status: "verified" },
+      };
+      const result = await userCollection.updateOne(filter, updatedDoc);
+      res.send(result);
     });
 
     console.log(
