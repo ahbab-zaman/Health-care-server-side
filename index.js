@@ -56,6 +56,27 @@ async function run() {
       });
     };
 
+    const verifySeller = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      const isSeller = user?.role === "seller";
+      if (!isSeller) {
+        res.status(403).send({ message: "Forbidden Access" });
+      }
+      next();
+    };
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      const isAdmin = user?.role === "admin";
+      if (!isAdmin) {
+        res.status(403).send({ message: "Forbidden Access" });
+      }
+      next();
+    };
+
     app.get("/allMedicine", async (req, res) => {
       const result = await medicineCollection.find().toArray();
       res.send(result);
@@ -132,7 +153,7 @@ async function run() {
 
     // Users API
 
-    app.post("/addUser", async (req, res) => {
+    app.post("/addUser", verifyToken, async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
       const existingUser = await userCollection.findOne(query);
@@ -143,9 +164,16 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/allUsers", async (req, res) => {
-      const result = await userCollection.find().toArray();
+    app.get("/allUsers/:email", verifyToken, verifyAdmin, async (req, res) => {
+      const query = { email: { $ne: email } };
+      const result = await userCollection.find(query).toArray();
       res.send(result);
+    });
+
+    app.get("/user/role/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await userCollection.findOne({ email });
+      res.send({ role: result?.role });
     });
 
     console.log(
