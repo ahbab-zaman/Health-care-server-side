@@ -194,6 +194,39 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/paymentInfo", verifyToken, verifyAdmin, async (req, res) => {
+      const result = await paymentCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.patch("/status/:id", verifyToken, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const { status } = req.body;
+      console.log(status);
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: { status },
+      };
+      const result = await paymentCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+
+    app.get("/sales", async (req, res) => {
+      const status = req.params.stats;
+      const pendingQuery = { status: status };
+      const paidQuery = { status: status };
+      const allPending = await paymentCollection.find(pendingQuery).toArray();
+      const allPaid = await paymentCollection.find(paidQuery).toArray();
+      const totalPendingPrice = allPending.reduce(
+        (prev, curr) => prev + curr.price,
+        0
+      );
+      const totalPaidPrice = allPaid.reduce(
+        (prev, curr) => prev + curr.price,
+        0
+      );
+      res.send({ totalPendingPrice, totalPaidPrice });
+    });
     // Users API
 
     app.post("/addUser", async (req, res) => {
@@ -220,17 +253,17 @@ async function run() {
       res.send({ role: result?.role });
     });
 
-    app.patch("/user/role/:email", verifyToken, async (req, res) => {
+    app.patch("/role/:email", verifyToken, verifyAdmin, async (req, res) => {
       const email = req.params.email;
       const { role } = req.body;
+      console.log(role);
       const filter = { email: email };
       const updatedDoc = {
-        $set: { role, status: "verified" },
+        $set: { role },
       };
       const result = await userCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
-
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
