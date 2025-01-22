@@ -115,6 +115,28 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/singleCategory/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await categoryCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.put("/category/:id", async (req, res) => {
+      const id = req.params.id;
+      const cursor = { _id: new ObjectId(id) };
+      const updatedCategory = req.body;
+      const newCategory = {
+        $set: {
+          name: updatedCategory.name,
+          image: updatedCategory.image,
+          quantity: updatedCategory.quantity,
+        },
+      };
+      const result = await categoryCollection.updateOne(cursor, newCategory);
+      res.send(result);
+    });
+
     // Cart
 
     app.post("/addCart", async (req, res) => {
