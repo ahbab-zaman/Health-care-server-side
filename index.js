@@ -26,7 +26,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    const medicineCollection = client.db("medicineDB").collection("medicine");
+    const medicineCollection = client.db("medicineDB").collection("newMedicine");
     const discountCollection = client.db("medicineDB").collection("discount");
     const cartCollection = client.db("medicineDB").collection("carts");
     const paymentCollection = client.db("medicineDB").collection("payments");
@@ -211,21 +211,34 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/sales", async (req, res) => {
-      const status = req.params.stats;
+    // Total Pending Sales
+    app.get("/sales/:pendingSales", async (req, res) => {
+      const status = req.params.pendingSales;
       const pendingQuery = { status: status };
-      const paidQuery = { status: status };
       const allPending = await paymentCollection.find(pendingQuery).toArray();
-      const allPaid = await paymentCollection.find(paidQuery).toArray();
       const totalPendingPrice = allPending.reduce(
         (prev, curr) => prev + curr.price,
         0
       );
+      res.send({ totalPendingPrice });
+    });
+
+    // Total Paid Sales
+    app.get("/salesPaid/:paidSales", async (req, res) => {
+      const status = req.params.paidSales;
+      const paidQuery = { status: status };
+      const totalSeller = await userCollection.countDocuments({
+        role: "seller",
+      });
+      const totalUser = await userCollection.countDocuments({
+        role: "user",
+      });
+      const allPaid = await paymentCollection.find(paidQuery).toArray();
       const totalPaidPrice = allPaid.reduce(
         (prev, curr) => prev + curr.price,
         0
       );
-      res.send({ totalPendingPrice, totalPaidPrice });
+      res.send({ totalPaidPrice, totalSeller, totalUser });
     });
     // Users API
 
