@@ -85,7 +85,7 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/addMedicine", async (req, res) => {
+    app.post("/addMedicine", verifyToken, verifySeller, async (req, res) => {
       const query = req.body;
       const result = await medicineCollection.insertOne(query);
       res.send(result);
@@ -219,7 +219,22 @@ async function run() {
       res.send(result);
     });
 
-    // Total Pending Sales
+    // User Payment History
+
+    app.get("/userPayment/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.get("/sellerHistory/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { "email": email };
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
+    });
+
     app.get("/sales/:pendingSales", async (req, res) => {
       const status = req.params.pendingSales;
       const pendingQuery = { status: status };
