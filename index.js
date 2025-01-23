@@ -34,6 +34,7 @@ async function run() {
     const paymentCollection = client.db("medicineDB").collection("payments");
     const userCollection = client.db("medicineDB").collection("users");
     const categoryCollection = client.db("medicineDB").collection("category");
+    const advertiseCollection = client.db("medicineDB").collection("advertise");
 
     // JWT API
     app.post("/jwt", async (req, res) => {
@@ -147,7 +148,7 @@ async function run() {
 
     // Cart
 
-    app.post("/addCart", async (req, res) => {
+    app.post("/addCart", verifyToken, async (req, res) => {
       const query = req.body;
       const result = await cartCollection.insertOne(query);
       res.send(result);
@@ -230,39 +231,49 @@ async function run() {
 
     app.get("/sellerHistory/:email", async (req, res) => {
       const email = req.params.email;
-      const query = { "email": email };
+      const query = { email: email };
       const result = await paymentCollection.find(query).toArray();
       res.send(result);
     });
 
-    app.get("/sales/:pendingSales", async (req, res) => {
-      const status = req.params.pendingSales;
-      const pendingQuery = { status: status };
-      const allPending = await paymentCollection.find(pendingQuery).toArray();
-      const totalPendingPrice = allPending.reduce(
-        (prev, curr) => prev + curr.price,
-        0
-      );
-      res.send({ totalPendingPrice });
-    });
+    app.get(
+      "/sales/:pendingSales",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const status = req.params.pendingSales;
+        const pendingQuery = { status: status };
+        const allPending = await paymentCollection.find(pendingQuery).toArray();
+        const totalPendingPrice = allPending.reduce(
+          (prev, curr) => prev + curr.price,
+          0
+        );
+        res.send({ totalPendingPrice });
+      }
+    );
 
     // Total Paid Sales
-    app.get("/salesPaid/:paidSales", async (req, res) => {
-      const status = req.params.paidSales;
-      const paidQuery = { status: status };
-      const totalSeller = await userCollection.countDocuments({
-        role: "seller",
-      });
-      const totalUser = await userCollection.countDocuments({
-        role: "user",
-      });
-      const allPaid = await paymentCollection.find(paidQuery).toArray();
-      const totalPaidPrice = allPaid.reduce(
-        (prev, curr) => prev + curr.price,
-        0
-      );
-      res.send({ totalPaidPrice, totalSeller, totalUser });
-    });
+    app.get(
+      "/salesPaid/:paidSales",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const status = req.params.paidSales;
+        const paidQuery = { status: status };
+        const totalSeller = await userCollection.countDocuments({
+          role: "seller",
+        });
+        const totalUser = await userCollection.countDocuments({
+          role: "user",
+        });
+        const allPaid = await paymentCollection.find(paidQuery).toArray();
+        const totalPaidPrice = allPaid.reduce(
+          (prev, curr) => prev + curr.price,
+          0
+        );
+        res.send({ totalPaidPrice, totalSeller, totalUser });
+      }
+    );
     // Users API
 
     app.post("/addUser", async (req, res) => {
@@ -292,7 +303,6 @@ async function run() {
     app.patch("/role/:email", verifyToken, verifyAdmin, async (req, res) => {
       const email = req.params.email;
       const { role } = req.body;
-      console.log(role);
       const filter = { email: email };
       const updatedDoc = {
         $set: { role },
@@ -300,9 +310,43 @@ async function run() {
       const result = await userCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
+
+    app.patch(
+      "/updateStatus/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const { status } = req.body;
+        const filter = { _id: new ObjectId(id) };
+        console.log(status);
+        const updatedDoc = {
+          $set: { status },
+        };
+        const result = await advertiseCollection.updateOne(filter, updatedDoc);
+        res.send(result);
+      }
     );
+
+    // Add Advertise by user
+
+    app.post("/addBanner", verifyToken, verifySeller, async (req, res) => {
+      const query = req.body;
+      const result = await advertiseCollection.insertOne(query);
+      res.send(result);
+    });
+
+    app.get("/allBanner", async (req, res) => {
+      const result = await advertiseCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/slider/:status", async (req, res) => {
+      const status = req.params.status;
+      const query = { status: status };
+      const result = await advertiseCollection.find(query).toArray();
+      res.send(result);
+    });
   } finally {
   }
 }
