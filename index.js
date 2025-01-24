@@ -86,6 +86,23 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/medicine", async (req, res) => {
+      const query = req.query;
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+      const result = await medicineCollection
+        .find()
+        .skip(page * size)
+        .limit(size)
+        .toArray();
+      res.send(result);
+    });
+
+    app.get("/medicineCount", async (req, res) => {
+      const count = await medicineCollection.estimatedDocumentCount();
+      res.send({ count });
+    });
+
     app.post("/addMedicine", verifyToken, verifySeller, async (req, res) => {
       const query = req.body;
       const result = await medicineCollection.insertOne(query);
