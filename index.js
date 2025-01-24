@@ -90,8 +90,21 @@ async function run() {
       const query = req.query;
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
+      const sort = req.query?.sort;
+      const search = req.query?.search;
+      let setQuery = {};
+      if (sort == "true") {
+        setQuery = { price: -1 };
+      }
+      let searchQuery = {
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { category_name: { $regex: search, $options: "i" } },
+        ],
+      };
       const result = await medicineCollection
-        .find()
+        .find(searchQuery)
+        .sort(setQuery)
         .skip(page * size)
         .limit(size)
         .toArray();
