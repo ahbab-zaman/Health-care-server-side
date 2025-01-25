@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173", "https://health-care-f14b8.web.app"],
     credentials: true,
   })
 );
@@ -238,10 +238,14 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/sellerPayment", verifyToken, verifySeller, async (req, res) => {
+      const result = await paymentCollection.find().toArray();
+      res.send(result);
+    });
+
     app.patch("/status/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const { status } = req.body;
-      console.log(status);
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
         $set: { status },
@@ -253,13 +257,6 @@ async function run() {
     // User Payment History
 
     app.get("/userPayment/:email", async (req, res) => {
-      const email = req.params.email;
-      const query = { email: email };
-      const result = await paymentCollection.find(query).toArray();
-      res.send(result);
-    });
-
-    app.get("/sellerHistory/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const result = await paymentCollection.find(query).toArray();
@@ -347,11 +344,11 @@ async function run() {
       verifyAdmin,
       async (req, res) => {
         const id = req.params.id;
-        const { status } = req.body;
+        const { bannerStatus } = req.body;
         const filter = { _id: new ObjectId(id) };
-        console.log(status);
+        console.log(bannerStatus);
         const updatedDoc = {
-          $set: { status },
+          $set: { bannerStatus },
         };
         const result = await advertiseCollection.updateOne(filter, updatedDoc);
         res.send(result);
@@ -377,6 +374,8 @@ async function run() {
       const result = await advertiseCollection.find(query).toArray();
       res.send(result);
     });
+
+    
   } finally {
   }
 }
