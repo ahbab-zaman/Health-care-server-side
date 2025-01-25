@@ -66,17 +66,18 @@ async function run() {
       const user = await userCollection.findOne(query);
       const isSeller = user?.role === "seller";
       if (!isSeller) {
-        res.status(403).send({ message: "Forbidden Access" });
+        return res.status(403).send({ message: "Forbidden Access" });
       }
       next();
     };
+
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
       const query = { email: email };
       const user = await userCollection.findOne(query);
       const isAdmin = user?.role === "admin";
       if (!isAdmin) {
-        res.status(403).send({ message: "Forbidden Access" });
+        return res.status(403).send({ message: "Forbidden Access" });
       }
       next();
     };
@@ -279,6 +280,46 @@ async function run() {
       }
     );
 
+    // Seller Payment History
+
+    app.get(
+      "/salePaid/:paidSale",
+      verifyToken,
+      verifySeller,
+      async (req, res) => {
+        const status = req.params.paidSale;
+        const paidQuery = { status: status };
+        const totalSeller = await userCollection.countDocuments({
+          role: "seller",
+        });
+        const totalUser = await userCollection.countDocuments({
+          role: "user",
+        });
+        const allPaid = await paymentCollection.find(paidQuery).toArray();
+        const totalPaidPrice = allPaid.reduce(
+          (prev, curr) => prev + curr.price,
+          0
+        );
+        res.send({ totalPaidPrice, totalSeller, totalUser });
+      }
+    );
+
+    app.get(
+      "/sale/:pendingSale",
+      verifyToken,
+      verifySeller,
+      async (req, res) => {
+        const status = req.params.pendingSale;
+        const pendingQuery = { status: status };
+        const allPending = await paymentCollection.find(pendingQuery).toArray();
+        const totalPendingPrice = allPending.reduce(
+          (prev, curr) => prev + curr.price,
+          0
+        );
+        res.send({ totalPendingPrice });
+      }
+    );
+
     // Total Paid Sales
     app.get(
       "/salesPaid/:paidSales",
@@ -374,8 +415,6 @@ async function run() {
       const result = await advertiseCollection.find(query).toArray();
       res.send(result);
     });
-
-    
   } finally {
   }
 }
