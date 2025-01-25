@@ -385,11 +385,10 @@ async function run() {
       verifyAdmin,
       async (req, res) => {
         const id = req.params.id;
-        const { bannerStatus } = req.body;
+        const { status } = req.body;
         const filter = { _id: new ObjectId(id) };
-        console.log(bannerStatus);
         const updatedDoc = {
-          $set: { bannerStatus },
+          $set: { status: status },
         };
         const result = await advertiseCollection.updateOne(filter, updatedDoc);
         res.send(result);
