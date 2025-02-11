@@ -3,13 +3,18 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const port = process.env.PORT || 4000;
 const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://health-care-f14b8.web.app"],
+    origin: [
+      "http://localhost:5173",
+      "https://health-care-f14b8.web.app",
+      "health-care-f14b8.firebaseapp.com",
+    ],
     credentials: true,
   })
 );
@@ -35,6 +40,9 @@ async function run() {
     const userCollection = client.db("medicineDB").collection("users");
     const categoryCollection = client.db("medicineDB").collection("category");
     const advertiseCollection = client.db("medicineDB").collection("advertise");
+    const subscriberCollection = client
+      .db("medicineDB")
+      .collection("subscribers");
 
     // JWT API
     app.post("/jwt", async (req, res) => {
@@ -413,6 +421,29 @@ async function run() {
       const query = { status: status };
       const result = await advertiseCollection.find(query).toArray();
       res.send(result);
+    });
+
+    // Transporter
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS,
+      },
+    });
+
+    // Subscriber API
+    app.post("/subscribe", async (req, res) => {
+      const { email: email } = req.body;
+      await subscriberCollection.insertOne({ email });
+      const mailOptions = {
+        from: process.env.GMAIL_USER,
+        to: process.env.GMAIL_USER,
+        subject: "New Subscription",
+        text: `A new user subscribe on your newsletter. Email: ${email}. Your get 20% of discount on each products.`,
+      };
+      await transporter.sendMail(mailOptions);
+      res.status(200).send({ message: "Subscribed successfully!" });
     });
   } finally {
   }
