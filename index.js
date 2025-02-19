@@ -99,10 +99,14 @@ async function run() {
       const query = req.query;
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
-      const sort = req.query?.sort;
       const search = req.query?.search;
+      const sortAsc = req?.query?.sortAsc;
+      const sortDsc = req?.query?.sortDsc;
       let setQuery = {};
-      if (sort == "true") {
+      if (sortAsc == "true") {
+        setQuery = { price: 1 };
+      }
+      if (sortDsc == "true") {
         setQuery = { price: -1 };
       }
       let searchQuery = {
