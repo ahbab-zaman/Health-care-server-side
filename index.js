@@ -13,7 +13,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://health-care-f14b8.web.app",
-      "health-care-f14b8.firebaseapp.com",
+      "https://health-care-f14b8.firebaseapp.com",
     ],
     credentials: true,
   })
